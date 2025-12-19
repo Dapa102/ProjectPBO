@@ -16,7 +16,6 @@ public class Musuh {
         this.serangan = 10;
     }
 
-    // GETTER 
     public String getNama() {
         return nama;
     }
@@ -29,7 +28,6 @@ public class Musuh {
         return serangan;
     }
 
-    // SETTER KHUSUS TURUNAN
     protected void setDarah(int darah) {
         if (darah < 0) {
             throw new IllegalArgumentException("Darah tidak boleh negatif!");
@@ -44,14 +42,13 @@ public class Musuh {
         this.serangan = serangan;
     }
 
-    // METHODS
     public void serangan(Player p) {
         try {
             if (p == null) {
                 throw new IllegalArgumentException("Target player tidak valid!");
             }
             if (this.isMati()) {
-                throw new IllegalStateException("Musuh sudah mati, tidak bisa menyerang!");
+                throw new IllegalStateException("Musuh sudah mati!");
             }
             System.out.println(nama + " menyerang kamu!");
             p.kenaSerangan(serangan);
@@ -61,16 +58,12 @@ public class Musuh {
     }
 
     public void kenaSerangan(int dmg) {
-        try {
-            if (dmg < 0) {
-                throw new IllegalArgumentException("Damage tidak boleh negatif!");
-            }
-            darah -= dmg;
-            if (darah < 0) darah = 0;
-            System.out.println(nama + " HP: " + darah);
-        } catch (IllegalArgumentException e) {
-            System.out.println("ERROR: " + e.getMessage());
+        if (dmg < 0) {
+            throw new IllegalArgumentException("Damage tidak boleh negatif!");
         }
+        darah -= dmg;
+        if (darah < 0) darah = 0;
+        System.out.println(nama + " HP: " + darah);
     }
 
     public boolean isMati(){

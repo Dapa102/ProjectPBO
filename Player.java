@@ -1,16 +1,34 @@
 package project_akhir.project2;
 
+import java.util.*;
+
 public class Player {
+
     private String nama;
     private int darah = 100;
     private int serangan = 15;
     private static final int MAX_DARAH = 150;
+
+    // HASHSET UNTUK SKILL (UNIK)
+    private HashSet<String> skills = new HashSet<>();
 
     public Player(String nama) {
         if (nama == null || nama.trim().isEmpty()) {
             throw new IllegalArgumentException("Nama player tidak boleh kosong!");
         }
         this.nama = nama;
+
+        // INISIALISASI SKILL PLAYER
+        skills.add("Serangan");
+        skills.add("Penyembuhan");
+        skills.add("Ultimate");
+    }
+
+    public void tampilkanSkill() {
+        System.out.println("\nSkill yang dimiliki player:");
+        for (String skill : skills) {
+            System.out.println("- " + skill);
+        }
     }
 
     public void serangMusuh(Musuh m) {
@@ -31,9 +49,8 @@ public class Player {
         if (m.isMati()) {
             throw new IllegalStateException("Musuh sudah mati!");
         }
-        int specialDamage = serangan * 8;
         System.out.println("\n" + nama + " menggunakan SERANGAN ULTIMATE!");
-        m.kenaSerangan(specialDamage);
+        m.kenaSerangan(serangan * 8);
     }
 
     public void penyembuhan() {
@@ -59,7 +76,7 @@ public class Player {
     public int getDarah(){ 
         return darah; 
     }
-    
+
     public String getNama(){ 
         return nama; 
     }
