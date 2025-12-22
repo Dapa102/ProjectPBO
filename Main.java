@@ -5,7 +5,7 @@ import java.util.*;
 public class Main {
 
     public static void main(String[] args) {
-
+        
         Scanner input = new Scanner(System.in);
         ArrayList<Musuh> daftarMusuh = new ArrayList<>();
         ArrayList<String> battleLog = new ArrayList<>();

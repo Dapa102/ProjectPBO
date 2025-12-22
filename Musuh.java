@@ -43,18 +43,14 @@ public class Musuh {
     }
 
     public void serangan(Player p) {
-        try {
-            if (p == null) {
-                throw new IllegalArgumentException("Target player tidak valid!");
-            }
-            if (this.isMati()) {
-                throw new IllegalStateException("Musuh sudah mati!");
-            }
-            System.out.println(nama + " menyerang kamu!");
-            p.kenaSerangan(serangan);
-        } catch (IllegalArgumentException | IllegalStateException e) {
-            System.out.println("ERROR: " + e.getMessage());
+        if (p == null) {
+            throw new IllegalArgumentException("Target player tidak valid!");
         }
+        if (this.isMati()) {
+            throw new IllegalStateException("Musuh sudah mati!");
+        }
+        System.out.println(nama + " menyerang kamu!");
+        p.kenaSerangan(serangan);
     }
 
     public void kenaSerangan(int dmg) {

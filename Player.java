@@ -1,16 +1,16 @@
 package project_akhir.project2;
 
-import java.util.*;
+import java.util.HashSet;
+import java.util.Set;
 
 public class Player {
-
     private String nama;
     private int darah = 100;
     private int serangan = 15;
     private static final int MAX_DARAH = 150;
 
-    // HASHSET UNTUK SKILL (UNIK)
-    private HashSet<String> skills = new HashSet<>();
+    // ===== HASHSET UNTUK SKILL =====
+    private Set<String> skillSet = new HashSet<>();
 
     public Player(String nama) {
         if (nama == null || nama.trim().isEmpty()) {
@@ -18,17 +18,10 @@ public class Player {
         }
         this.nama = nama;
 
-        // INISIALISASI SKILL PLAYER
-        skills.add("Serangan");
-        skills.add("Penyembuhan");
-        skills.add("Ultimate");
-    }
-
-    public void tampilkanSkill() {
-        System.out.println("\nSkill yang dimiliki player:");
-        for (String skill : skills) {
-            System.out.println("- " + skill);
-        }
+        // Skill default (unik)
+        skillSet.add("Serangan");
+        skillSet.add("Penyembuhan");
+        skillSet.add("Ultimate");
     }
 
     public void serangMusuh(Musuh m) {
@@ -43,25 +36,36 @@ public class Player {
     }
 
     public void seranganBurst(Musuh m) {
+        if (!skillSet.contains("Ultimate")) {
+            throw new IllegalStateException("Skill Ultimate tidak tersedia!");
+        }
         if (m == null) {
             throw new IllegalArgumentException("Target musuh tidak valid!");
         }
         if (m.isMati()) {
             throw new IllegalStateException("Musuh sudah mati!");
         }
+        int specialDamage = serangan * 8;
         System.out.println("\n" + nama + " menggunakan SERANGAN ULTIMATE!");
-        m.kenaSerangan(serangan * 8);
+        m.kenaSerangan(specialDamage);
     }
 
     public void penyembuhan() {
+        if (!skillSet.contains("Penyembuhan")) {
+            throw new IllegalStateException("Skill penyembuhan tidak tersedia!");
+        }
         if (darah >= MAX_DARAH) {
-            throw new IllegalStateException("HP sudah maksimal! Tidak perlu penyembuhan.");
+            throw new IllegalStateException("HP sudah maksimal!");
         }
         darah += 10;
         if (darah > MAX_DARAH) {
             darah = MAX_DARAH;
         }
         System.out.println("HP bertambah! HP: " + darah);
+    }
+
+    public void tampilkanSkill() {
+        System.out.println("Skill " + nama + ": " + skillSet);
     }
 
     public void kenaSerangan(int dmg) {
