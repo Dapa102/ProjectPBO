@@ -1,365 +1,301 @@
 package project_akhir.project2;
 
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.FlowLayout;
-import java.awt.Font;
-import java.awt.FontMetrics;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.GridLayout;
-import java.awt.RenderingHints;
-import java.util.function.Supplier;
-import javax.swing.JButton;
-import javax.swing.JComboBox;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JProgressBar;
-import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
-import javax.swing.SwingUtilities;
-import javax.swing.border.EmptyBorder;
+import javafx.application.Application;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.scene.Scene;
+import javafx.scene.control.*;
+import javafx.scene.layout.*;
+import javafx.stage.Stage;
 
-public class GameGUI extends JFrame {
-    private static final long serialVersionUID = 1L;
-
-    private static final int PLAYER_MAX_HP = 150;
-
-    private final JTextArea logArea = new JTextArea();
-    private final JLabel playerHpLabel = new JLabel("-");
-    private final JLabel musuhHpLabel = new JLabel("-");
-    private final JLabel playerNameLabel = new JLabel("-");
-    private final JLabel enemyNameLabel = new JLabel("-");
-    private final JProgressBar playerHpBar = new JProgressBar(0, PLAYER_MAX_HP);
-    private final JProgressBar musuhHpBar = new JProgressBar();
-    private JButton attackButton;
-    private JButton healButton;
-    private JButton ultimateButton;
-    private JButton startButton;
-    private final EnemyOption[] enemyOptions = new EnemyOption[] {
-        new EnemyOption("Kroco (Goblin)", () -> new Musuh("Kroco (Goblin)")),
-        new EnemyOption("Boss Naga Kuwad", () -> new Boss("Boss Naga Kuwad")),
-        new EnemyOption("Super Boss Raja Iblis", () -> new SuperBoss("Super Boss Raja Iblis"))
-    };
-    private final JComboBox<String> musuhCombo = new JComboBox<>(getEnemyNames());
-
+public class GameGUI extends Application {
+    
+    private enum TurnAction {
+        ATTACK, HEAL, ULTIMATE
+    }
+    
     private Player player;
     private Musuh musuh;
     private String playerName;
     private int musuhMaxHp;
-
-    public GameGUI() {
-        super("RPG Fantasy GUI");
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(720, 480);
-        setLocationRelativeTo(null);
-        setResizable(false);
-
-        buildLayout();
-        bindActions();
+    
+    private Label playerNameLabel;
+    private Label playerHpLabel;
+    private Label enemyNameLabel;
+    private Label enemyHpLabel;
+    private ProgressBar playerHpBar;
+    private ProgressBar enemyHpBar;
+    private TextArea logArea;
+    private ComboBox<String> enemyCombo;
+    private Button startButton;
+    private Button attackButton;
+    private Button healButton;
+    private Button ultimateButton;
+    
+    private static final int PLAYER_MAX_HP = 150;
+    
+    @Override
+    public void start(Stage stage) {
+        stage.setTitle("⚔️ RPG Fantasy Arena");
+        stage.setWidth(1000);
+        stage.setHeight(650);
+        stage.setResizable(false);
+        
+        // Main Layout
+        BorderPane root = new BorderPane();
+        root.setStyle("-fx-background-color: #121619;");
+        root.setPadding(new Insets(15));
+        
+        // Top - Title
+        VBox topBox = createTopPanel();
+        root.setTop(topBox);
+        
+        // Left - Stats & Controls
+        VBox leftBox = createLeftPanel();
+        leftBox.setPrefWidth(280);
+        root.setLeft(leftBox);
+        
+        // Center - Log Area
+        logArea = new TextArea();
+        logArea.setEditable(false);
+        logArea.setWrapText(true);
+        logArea.setStyle("-fx-control-inner-background: #1a1f26; -fx-text-fill: white; -fx-font-family: 'Monospaced'; -fx-font-size: 12;");
+        logArea.setPrefRowCount(25);
+        
+        ScrollPane scrollPane = new ScrollPane(logArea);
+        scrollPane.setFitToWidth(true);
+        scrollPane.setStyle("-fx-background: #1a1f26;");
+        root.setCenter(scrollPane);
+        
+        // Right - Action Buttons
+        VBox rightBox = createActionPanel();
+        root.setRight(rightBox);
+        
+        Scene scene = new Scene(root);
+        stage.setScene(scene);
+        stage.show();
+        
+        // Prompt for player name
         promptPlayerName();
     }
-
-    private void buildLayout() {
-        setLayout(new BorderLayout(12, 12));
-        getContentPane().setBackground(new Color(18, 22, 28));
-        ((JPanel) getContentPane()).setBorder(new EmptyBorder(12, 12, 12, 12));
-
-        JLabel title = new JLabel("RPG Fantasy Arena");
-        title.setFont(new Font("Serif", Font.BOLD, 24));
-        title.setForeground(new Color(247, 208, 96));
-        JPanel titlePanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        titlePanel.setBackground(new Color(18, 22, 28));
-        titlePanel.add(title);
-
-        JPanel statsPanel = buildStatsPanel();
-        JPanel selectPanel = buildSelectPanel();
-
-        JPanel leftPanel = new JPanel(new BorderLayout(8, 8));
-        leftPanel.setBackground(new Color(18, 22, 28));
-        leftPanel.add(titlePanel, BorderLayout.NORTH);
-        leftPanel.add(statsPanel, BorderLayout.CENTER);
-        leftPanel.add(selectPanel, BorderLayout.SOUTH);
-
-        logArea.setEditable(false);
-        logArea.setLineWrap(true);
-        logArea.setWrapStyleWord(true);
-        logArea.setBackground(new Color(26, 31, 38));
-        logArea.setForeground(Color.WHITE);
-        logArea.setFont(new Font("Monospaced", Font.PLAIN, 13));
-        JScrollPane scrollPane = new JScrollPane(logArea);
-        scrollPane.setBorder(new EmptyBorder(8, 8, 8, 8));
-
-        JPanel actionPanel = new JPanel(new GridLayout(3, 1, 10, 10));
-        actionPanel.setBackground(new Color(18, 22, 28));
-        attackButton = new RoundButton("SERANG", new Color(78, 190, 159));
-        healButton = new RoundButton("PENYEMBUHAN", new Color(94, 140, 255));
-        ultimateButton = new RoundButton("ULTIMATE", new Color(232, 99, 143));
-        attackButton.addActionListener(e -> executePlayerTurn(TurnAction.ATTACK));
-        healButton.addActionListener(e -> executePlayerTurn(TurnAction.HEAL));
-        ultimateButton.addActionListener(e -> executePlayerTurn(TurnAction.ULTIMATE));
-        actionPanel.add(attackButton);
-        actionPanel.add(healButton);
-        actionPanel.add(ultimateButton);
-
-        add(leftPanel, BorderLayout.WEST);
-        add(scrollPane, BorderLayout.CENTER);
-        add(actionPanel, BorderLayout.EAST);
-
+    
+    private VBox createTopPanel() {
+        VBox topBox = new VBox(10);
+        topBox.setStyle("-fx-background-color: #121619;");
+        topBox.setPadding(new Insets(10));
+        
+        Label titleLabel = new Label("⚔️ RPG Fantasy Arena");
+        titleLabel.setStyle("-fx-font-size: 32; -fx-font-weight: bold; -fx-text-fill: #f7d060;");
+        
+        topBox.getChildren().add(titleLabel);
+        return topBox;
+    }
+    
+    private VBox createLeftPanel() {
+        VBox leftBox = new VBox(15);
+        leftBox.setStyle("-fx-background-color: #121619;");
+        
+        // Player Stats
+        VBox playerStats = createStatsBox("Player Stats", "#4ebea0");
+        playerNameLabel = new Label("Hero");
+        playerNameLabel.setStyle("-fx-text-fill: white; -fx-font-size: 16; -fx-font-weight: bold;");
+        playerHpLabel = new Label("HP: 150/150");
+        playerHpLabel.setStyle("-fx-text-fill: white; -fx-font-size: 13;");
+        playerHpBar = new ProgressBar(1.0);
+        playerHpBar.setPrefWidth(240);
+        playerHpBar.setStyle("-fx-accent: #4ebea0;");
+        playerStats.getChildren().addAll(playerNameLabel, playerHpLabel, playerHpBar);
+        
+        // Enemy Stats
+        VBox enemyStats = createStatsBox("Enemy Stats", "#e8638f");
+        enemyNameLabel = new Label("Belum dipilih");
+        enemyNameLabel.setStyle("-fx-text-fill: white; -fx-font-size: 16; -fx-font-weight: bold;");
+        enemyHpLabel = new Label("HP: 0/0");
+        enemyHpLabel.setStyle("-fx-text-fill: white; -fx-font-size: 13;");
+        enemyHpBar = new ProgressBar(0);
+        enemyHpBar.setPrefWidth(240);
+        enemyHpBar.setStyle("-fx-accent: #e8638f;");
+        enemyStats.getChildren().addAll(enemyNameLabel, enemyHpLabel, enemyHpBar);
+        
+        // Enemy Selection
+        VBox selectBox = createStatsBox("Pilih Musuh", "#5e8cff");
+        enemyCombo = new ComboBox<>();
+        enemyCombo.getItems().addAll(
+            "Kroco (Goblin)",
+            "Boss Naga Kuwad",
+            "Super Boss Raja Iblis"
+        );
+        enemyCombo.setValue("Kroco (Goblin)");
+        enemyCombo.setStyle("-fx-font-size: 12; -fx-padding: 8;");
+        enemyCombo.setPrefWidth(240);
+        
+        startButton = new Button("START BATTLE");
+        startButton.setStyle("-fx-font-size: 14; -fx-padding: 12; -fx-background-color: #5e8cff; -fx-text-fill: white; -fx-font-weight: bold; -fx-border-radius: 5;");
+        startButton.setPrefWidth(240);
+        startButton.setOnAction(e -> startBattle());
+        
+        selectBox.getChildren().addAll(enemyCombo, startButton);
+        
+        leftBox.getChildren().addAll(playerStats, enemyStats, selectBox);
+        return leftBox;
+    }
+    
+    private VBox createStatsBox(String title, String color) {
+        VBox box = new VBox(10);
+        box.setStyle("-fx-border-color: " + color + "; -fx-border-width: 2; -fx-padding: 12;");
+        box.setPrefHeight(150);
+        
+        Label titleLabel = new Label(title);
+        titleLabel.setStyle("-fx-font-size: 16; -fx-font-weight: bold; -fx-text-fill: " + color + ";");
+        box.getChildren().add(titleLabel);
+        
+        return box;
+    }
+    
+    private VBox createActionPanel() {
+        VBox actionBox = new VBox(15);
+        actionBox.setStyle("-fx-background-color: #121619;");
+        actionBox.setPrefWidth(160);
+        actionBox.setAlignment(Pos.TOP_CENTER);
+        actionBox.setPadding(new Insets(20, 10, 20, 10));
+        
+        Label actionLabel = new Label("Actions");
+        actionLabel.setStyle("-fx-font-size: 16; -fx-font-weight: bold; -fx-text-fill: #f7d060;");
+        
+        attackButton = createActionButton("SERANG", "#4ebea0");
+        healButton = createActionButton("PENYEMBUHAN", "#5e8cff");
+        ultimateButton = createActionButton("ULTIMATE", "#e8638f");
+        
+        attackButton.setOnAction(e -> executePlayerTurn(TurnAction.ATTACK));
+        healButton.setOnAction(e -> executePlayerTurn(TurnAction.HEAL));
+        ultimateButton.setOnAction(e -> executePlayerTurn(TurnAction.ULTIMATE));
+        
         setButtonsEnabled(false);
+        
+        actionBox.getChildren().addAll(actionLabel, attackButton, healButton, ultimateButton);
+        return actionBox;
     }
-
-    private void bindActions() {
-        // Action listeners sudah di-set di buildActionPanel dan buildSelectPanel
+    
+    private Button createActionButton(String text, String color) {
+        Button btn = new Button(text);
+        btn.setStyle("-fx-font-size: 13; -fx-padding: 15; -fx-background-color: " + color + "; -fx-text-fill: white; -fx-font-weight: bold; -fx-border-radius: 5;");
+        btn.setPrefWidth(140);
+        return btn;
     }
-
+    
     private void promptPlayerName() {
-        playerName = JOptionPane.showInputDialog(this, "Masukkan nama hero:", "Nama Hero", JOptionPane.QUESTION_MESSAGE);
-        if (playerName == null || playerName.trim().isEmpty()) {
-            playerName = "Hero";
-        }
-        player = new Player(playerName);
-        playerNameLabel.setText(playerName);
-        appendLog("Selamat datang, " + playerName + "!");
-        updateStatus();
+        TextInputDialog dialog = new TextInputDialog("Hero");
+        dialog.setTitle("Input Nama Hero");
+        dialog.setHeaderText("Masukkan nama hero Anda:");
+        dialog.setContentText("Nama:");
+        dialog.showAndWait().ifPresent(name -> {
+            playerName = name.isEmpty() ? "Hero" : name;
+            player = new Player(playerName);
+            playerNameLabel.setText(playerName);
+            appendLog("Selamat datang, " + playerName + "!");
+            updateStatus();
+        });
     }
-
+    
     private void startBattle() {
-        musuh = enemyOptions[musuhCombo.getSelectedIndex()].factory.get();
+        String selectedEnemy = enemyCombo.getValue();
+        switch(selectedEnemy) {
+            case "Kroco (Goblin)" -> musuh = new Musuh("Kroco (Goblin)");
+            case "Boss Naga Kuwad" -> musuh = new Boss("Boss Naga Kuwad");
+            case "Super Boss Raja Iblis" -> musuh = new SuperBoss("Super Boss Raja Iblis");
+            default -> musuh = new Musuh("Kroco (Goblin)");
+        }
+        
         musuhMaxHp = musuh.getDarah();
-        musuhHpBar.setMaximum(musuhMaxHp);
-        musuhHpBar.setValue(musuhMaxHp);
+        enemyHpBar.setProgress(1.0);
         player = new Player(playerName);
-        logArea.setText("");
+        logArea.clear();
+        appendLog("═══════════════════════════════════════");
         appendLog("Melawan " + musuh.getNama() + "!");
+        appendLog("═══════════════════════════════════════\n");
         enemyNameLabel.setText(musuh.getNama());
         setButtonsEnabled(true);
         updateStatus();
     }
-
+    
     private void executePlayerTurn(TurnAction action) {
         if (musuh == null) {
-            JOptionPane.showMessageDialog(this, "Pilih musuh dan mulai pertarungan terlebih dahulu.", "Info", JOptionPane.INFORMATION_MESSAGE);
+            showAlert("Pilih musuh dan mulai pertarungan terlebih dahulu.");
             return;
         }
+        
         try {
-            switch (action) {
+            switch(action) {
                 case ATTACK:
                     player.serangMusuh(musuh);
-                    appendLog(player.getNama() + " menyerang " + musuh.getNama());
+                    appendLog("[" + playerName + "] Menyerang " + musuh.getNama() + "! Damage: " + musuh.getSerangan());
                     break;
                 case HEAL:
                     player.penyembuhan();
-                    appendLog(player.getNama() + " memulihkan HP");
+                    appendLog("[" + playerName + "] Menggunakan penyembuhan! HP: " + player.getDarah());
                     break;
                 case ULTIMATE:
                     player.seranganBurst(musuh);
-                    appendLog(player.getNama() + " menggunakan ULTIMATE!");
-                    break;
-                default:
+                    appendLog("[" + playerName + "] Menggunakan ULTIMATE! Damage: " + (musuh.getSerangan() * 8));
                     break;
             }
-
-            if (!musuh.isMati()) {
+            
+            if (musuh.getDarah() <= 0) {
+                appendLog("\n✓✓✓ " + musuh.getNama() + " telah dikalahkan! ✓✓✓\n");
+                setButtonsEnabled(false);
+                return;
+            }
+            
+            // Enemy turn - simple random action
+            java.util.Random rand = new java.util.Random();
+            if (rand.nextBoolean()) {
                 musuh.serangan(player);
-                appendLog(musuh.getNama() + " menyerang balik!");
+                appendLog("[" + musuh.getNama() + "] Menyerang balik! Damage: " + musuh.getSerangan());
+            } else {
+                appendLog("[" + musuh.getNama() + "] Menghindar!");
             }
-
+            
+            if (player.getDarah() <= 0) {
+                appendLog("\n✗✗✗ " + playerName + " telah dikalahkan! ✗✗✗\n");
+                setButtonsEnabled(false);
+                return;
+            }
+            
             updateStatus();
-            checkOutcome();
         } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this, ex.getMessage(), "Kesalahan", JOptionPane.ERROR_MESSAGE);
+            showAlert("Error: " + ex.getMessage());
         }
     }
-
-    private void checkOutcome() {
-        if (musuh == null || player == null) {
-            return;
-        }
-        if (musuh.isMati()) {
-            appendLog("Kamu menang melawan " + musuh.getNama() + "!");
-            setButtonsEnabled(false);
-        } else if (player.getDarah() <= 0) {
-            appendLog("HP habis. Game over...");
-            setButtonsEnabled(false);
-        }
-    }
-
+    
     private void updateStatus() {
-        if (player == null) {
-            playerHpLabel.setText("-");
-            playerHpBar.setValue(0);
-            playerHpBar.setString("0 / " + PLAYER_MAX_HP);
-        } else {
-            playerHpLabel.setText(String.valueOf(player.getDarah()));
-            playerHpBar.setValue(player.getDarah());
-            playerHpBar.setString(player.getDarah() + " / " + PLAYER_MAX_HP);
-            playerNameLabel.setText(player.getNama());
-        }
-
-        if (musuh == null) {
-            musuhHpLabel.setText("-");
-            musuhHpBar.setValue(0);
-            musuhHpBar.setString("0 / -");
-            enemyNameLabel.setText("-");
-        } else {
-            musuhHpLabel.setText(String.valueOf(musuh.getDarah()));
-            musuhHpBar.setValue(musuh.getDarah());
-            musuhHpBar.setString(musuh.getDarah() + " / " + musuhMaxHp);
-            enemyNameLabel.setText(musuh.getNama());
+        playerHpLabel.setText("HP: " + player.getDarah() + "/150");
+        playerHpBar.setProgress((double) player.getDarah() / PLAYER_MAX_HP);
+        
+        if (musuh != null) {
+            enemyHpLabel.setText("HP: " + musuh.getDarah() + "/" + musuhMaxHp);
+            enemyHpBar.setProgress((double) musuh.getDarah() / musuhMaxHp);
         }
     }
-
+    
+    private void appendLog(String message) {
+        logArea.appendText(message + "\n");
+    }
+    
     private void setButtonsEnabled(boolean enabled) {
-        attackButton.setEnabled(enabled);
-        healButton.setEnabled(enabled);
-        ultimateButton.setEnabled(enabled);
+        attackButton.setDisable(!enabled);
+        healButton.setDisable(!enabled);
+        ultimateButton.setDisable(!enabled);
     }
-
-    private void appendLog(String text) {
-        logArea.append(text + "\n");
-        logArea.setCaretPosition(logArea.getDocument().getLength());
+    
+    private void showAlert(String message) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("Info");
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.showAndWait();
     }
-
-    private String[] getEnemyNames() {
-        String[] names = new String[enemyOptions.length];
-        for (int i = 0; i < enemyOptions.length; i++) {
-            names[i] = enemyOptions[i].label;
-        }
-        return names;
-    }
-
-    private JPanel buildStatsPanel() {
-        JPanel panel = new JPanel(new GridLayout(2, 1, 10, 10));
-        panel.setBackground(new Color(18, 22, 28));
-
-        JPanel heroCard = createCard("Hero", playerNameLabel, playerHpLabel, playerHpBar, new Color(39, 52, 68));
-        JPanel enemyCard = createCard("Musuh", enemyNameLabel, musuhHpLabel, musuhHpBar, new Color(52, 36, 64));
-
-        panel.add(heroCard);
-        panel.add(enemyCard);
-        return panel;
-    }
-
-    private JPanel buildSelectPanel() {
-        JPanel selectPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 5));
-        selectPanel.setBackground(new Color(18, 22, 28));
-        JLabel pilihLabel = new JLabel("Pilih Musuh:");
-        pilihLabel.setForeground(Color.WHITE);
-        selectPanel.add(pilihLabel);
-        selectPanel.add(musuhCombo);
-        startButton = new RoundButton("MULAI", new Color(247, 208, 96));
-        startButton.addActionListener(e -> startBattle());
-        selectPanel.add(startButton);
-        return selectPanel;
-    }
-
-    private JPanel createCard(String title, JLabel nameLabel, JLabel hpLabel, JProgressBar hpBar, Color bg) {
-        JPanel card = new JPanel(new BorderLayout(6, 6));
-        card.setBackground(bg);
-        card.setBorder(new EmptyBorder(10, 10, 10, 10));
-
-        JLabel heading = new JLabel(title);
-        heading.setFont(new Font("Serif", Font.BOLD, 16));
-        heading.setForeground(new Color(247, 208, 96));
-
-        nameLabel.setForeground(Color.WHITE);
-        nameLabel.setFont(new Font("SansSerif", Font.BOLD, 14));
-
-        hpLabel.setForeground(Color.LIGHT_GRAY);
-
-        hpBar.setStringPainted(true);
-        hpBar.setForeground(new Color(94, 140, 255));
-        hpBar.setBackground(new Color(33, 40, 52));
-        hpBar.setValue(hpBar.getMaximum());
-
-        JPanel top = new JPanel(new BorderLayout());
-        top.setOpaque(false);
-        top.add(heading, BorderLayout.WEST);
-        top.add(nameLabel, BorderLayout.EAST);
-
-        JPanel bottom = new JPanel(new BorderLayout());
-        bottom.setOpaque(false);
-        bottom.add(hpBar, BorderLayout.CENTER);
-        bottom.add(hpLabel, BorderLayout.EAST);
-
-        card.add(top, BorderLayout.NORTH);
-        card.add(bottom, BorderLayout.CENTER);
-        return card;
-    }
-
-    private enum TurnAction {
-        ATTACK,
-        HEAL,
-        ULTIMATE
-    }
-
-    // Custom Rounded Button
-    private static class RoundButton extends JButton {
-        private Color baseColor;
-        private boolean hovered = false;
-        
-        public RoundButton(String text, Color color) {
-            super(text);
-            this.baseColor = color;
-            setContentAreaFilled(false);
-            setFocusPainted(false);
-            setBorderPainted(false);
-            setForeground(Color.WHITE);
-            setFont(new Font("SansSerif", Font.BOLD, 13));
-            setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
-            
-            addMouseListener(new java.awt.event.MouseAdapter() {
-                @Override
-                public void mouseEntered(java.awt.event.MouseEvent e) {
-                    hovered = true;
-                    repaint();
-                }
-                
-                @Override
-                public void mouseExited(java.awt.event.MouseEvent e) {
-                    hovered = false;
-                    repaint();
-                }
-            });
-        }
-        
-        @Override
-        protected void paintComponent(Graphics g) {
-            Graphics2D g2d = (Graphics2D) g;
-            g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-            
-            Color color = hovered ? baseColor.brighter() : baseColor;
-            g2d.setColor(color);
-            g2d.fillRoundRect(0, 0, getWidth(), getHeight(), 10, 10);
-            
-            // Draw text
-            FontMetrics fm = g2d.getFontMetrics();
-            int x = (getWidth() - fm.stringWidth(getText())) / 2;
-            int y = ((getHeight() - fm.getHeight()) / 2) + fm.getAscent();
-            
-            g2d.setColor(Color.WHITE);
-            g2d.setFont(getFont());
-            g2d.drawString(getText(), x, y);
-        }
-    }
-
-    private static class EnemyOption {
-        final String label;
-        final Supplier<Musuh> factory;
-
-        EnemyOption(String label, Supplier<Musuh> factory) {
-            this.label = label;
-            this.factory = factory;
-        }
-    }
-
+    
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> {
-            GameGUI gui = new GameGUI();
-            gui.setVisible(true);
-        });
+        launch(args);
     }
 }
