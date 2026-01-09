@@ -97,7 +97,7 @@ public class GameGUI extends Application {
         
         // Player Stats
         VBox playerStats = createStatsBox("Player Stats", "#4ebea0");
-        playerNameLabel = new Label("Hero");
+        playerNameLabel = new Label("...");
         playerNameLabel.setStyle("-fx-text-fill: white; -fx-font-size: 16; -fx-font-weight: bold;");
         playerHpLabel = new Label("HP: 150/150");
         playerHpLabel.setStyle("-fx-text-fill: white; -fx-font-size: 13;");
