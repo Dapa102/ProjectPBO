@@ -52,17 +52,6 @@ public class Musuh {
         System.out.println(nama + " menyerang kamu!");
         p.kenaSerangan(serangan);
     }
-    
-    public void serangan(PlayerEnhanced p) {
-        if (p == null) {
-            throw new IllegalArgumentException("Target player tidak valid!");
-        }
-        if (this.isMati()) {
-            throw new IllegalStateException("Musuh sudah mati!");
-        }
-        System.out.println(nama + " menyerang kamu!");
-        p.kenaSerangan(serangan);
-    }
 
     public void kenaSerangan(int dmg) {
         if (dmg < 0) {
