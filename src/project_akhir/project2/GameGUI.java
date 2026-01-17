@@ -28,6 +28,9 @@ public class GameGUI extends Application {
     private Musuh musuh;
     private String playerName;
     private int musuhMaxHp;
+    private int playerId = -1;
+    private int totalDamageDealt = 0;
+    private boolean battleResultRecorded = false;
     
     private Label playerHpLabel;
     private Label enemyHpLabel;
@@ -78,6 +81,14 @@ public class GameGUI extends Application {
         stage.setScene(scene);
         stage.show();
         
+        // Inisialisasi database
+        try {
+            DatabaseManager.testConnection();
+            System.out.println("✓ Database siap digunakan");
+        } catch (Exception ex) {
+            System.err.println("Warning: Database tidak tersedia - " + ex.getMessage());
+        }
+
         // Prompt for player name
         promptPlayerName();
     }
@@ -139,12 +150,22 @@ public class GameGUI extends Application {
         startButton.setPrefWidth(380);
         startButton.setOnAction(e -> startBattle());
         
+        HBox secondaryActions = new HBox(10);
+        secondaryActions.setAlignment(Pos.CENTER);
+        Button leaderboardBtn = new Button("🏅 LEADERBOARD");
+        leaderboardBtn.setStyle("-fx-font-size: 14; -fx-padding: 10 18; -fx-background-color: #2d7a68; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 8;");
+        leaderboardBtn.setOnAction(e -> showLeaderboard());
+        Button historyBtn = new Button("📜 RIWAYAT SAYA");
+        historyBtn.setStyle("-fx-font-size: 14; -fx-padding: 10 18; -fx-background-color: #a8335f; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 8;");
+        historyBtn.setOnAction(e -> showPlayerHistory());
+        secondaryActions.getChildren().addAll(leaderboardBtn, historyBtn);
+        
         exitButton = new Button("🚪 EXIT");
         exitButton.setStyle("-fx-font-size: 16; -fx-padding: 15; -fx-background-color: #8f2d2d; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 8; -fx-border-color: #af4d4d; -fx-border-width: 2; -fx-border-radius: 8;");
         exitButton.setPrefWidth(380);
         exitButton.setOnAction(e -> exitGame());
         
-        selectBox.getChildren().addAll(selectLabel, enemyCombo, startButton, exitButton);
+        selectBox.getChildren().addAll(selectLabel, enemyCombo, startButton, secondaryActions, exitButton);
         centerBox.getChildren().add(selectBox);
         mainLayout.setCenter(centerBox);
         
@@ -532,6 +553,12 @@ public class GameGUI extends Application {
         dialog.showAndWait().ifPresent(name -> {
             playerName = name.isEmpty() ? "Hero" : name;
             player = new Player(playerName);
+            try {
+                playerId = PlayerDAO.savePlayer(playerName);
+                System.out.println("✓ Player " + playerName + " tersimpan (ID: " + playerId + ")");
+            } catch (Exception ex) {
+                System.err.println("Error menyimpan player: " + ex.getMessage());
+            }
         });
     }
     
@@ -545,6 +572,8 @@ public class GameGUI extends Application {
         }
         
         musuhMaxHp = musuh.getDarah();
+        totalDamageDealt = 0;
+        battleResultRecorded = false;
         player = new Player(playerName);
         
         // Recreate VS screen with updated enemy name
@@ -681,6 +710,7 @@ public class GameGUI extends Application {
                 case ATTACK:
                     player.serangMusuh(musuh);
                     int damage = previousEnemyHp - musuh.getDarah();
+                    totalDamageDealt += Math.max(damage, 0);
                     showDamageAnimation(enemyCharacterContainer, damage, false);
                     appendLog("⚔️ " + playerName + " menyerang! Damage: " + damage);
                     break;
@@ -693,6 +723,7 @@ public class GameGUI extends Application {
                 case ULTIMATE:
                     player.seranganBurst(musuh);
                     int ultDamage = previousEnemyHp - musuh.getDarah();
+                    totalDamageDealt += Math.max(ultDamage, 0);
                     showDamageAnimation(enemyCharacterContainer, ultDamage, true);
                     appendLog("💥 " + playerName + " melancarkan ULTIMATE ATTACK! Damage: " + ultDamage);
                     break;
@@ -703,6 +734,7 @@ public class GameGUI extends Application {
             if (musuh.getDarah() <= 0) {
                 appendLog("✅ VICTORY! " + musuh.getNama() + " telah dikalahkan!");
                 setButtonsEnabled(false);
+                recordBattleResult(true);
                 PauseTransition victoryDelay = new PauseTransition(Duration.millis(1000));
                 victoryDelay.setOnFinished(e -> showVictoryScreen());
                 victoryDelay.play();
@@ -728,6 +760,7 @@ public class GameGUI extends Application {
                     if (player.getDarah() <= 0) {
                         appendLog("❌ DEFEAT! " + playerName + " telah dikalahkan!");
                         setButtonsEnabled(false);
+                        recordBattleResult(false);
                         PauseTransition defeatDelay = new PauseTransition(Duration.millis(1000));
                         defeatDelay.setOnFinished(e -> showDefeatScreen());
                         defeatDelay.play();
@@ -1000,6 +1033,84 @@ public class GameGUI extends Application {
         
         fadeIn.play();
         fadeIn.setOnFinished(e -> shake.play());
+    }
+    
+    private void recordBattleResult(boolean menang) {
+        if (battleResultRecorded || playerId == -1) {
+            return;
+        }
+        battleResultRecorded = true;
+        
+        try {
+            String namaMusuh = (musuh != null) ? musuh.getNama() : "Unknown";
+            PlayerDAO.updatePlayerStats(playerId, menang, totalDamageDealt);
+            PlayerDAO.saveBattleHistory(playerId, namaMusuh, totalDamageDealt, menang);
+            System.out.println("✓ Battle result tersimpan ke database");
+        } catch (Exception ex) {
+            System.err.println("Error menyimpan battle result: " + ex.getMessage());
+        }
+    }
+    
+    private void showLeaderboard() {
+        try {
+            var topPlayers = PlayerDAO.getLeaderboard(10);
+            if (topPlayers == null || topPlayers.isEmpty()) {
+                showAlert("Leaderboard masih kosong.");
+                return;
+            }
+            StringBuilder sb = new StringBuilder();
+            int rank = 1;
+            for (var p : topPlayers) {
+                sb.append(rank)
+                  .append(". ")
+                  .append(p.name)
+                  .append("  | W:")
+                  .append(p.totalMenang)
+                  .append(" L:")
+                  .append(p.totalKalah)
+                  .append("  | DMG: ")
+                  .append(p.damageTertinggi)
+                  .append('\n');
+                rank++;
+            }
+            showTextDialog("Leaderboard Top 10", sb.toString());
+        } catch (Exception ex) {
+            showAlert("Error memuat leaderboard: " + ex.getMessage());
+        }
+    }
+    
+    private void showPlayerHistory() {
+        if (playerId == -1) {
+            showAlert("Nama belum disimpan. Mulai game terlebih dahulu.");
+            return;
+        }
+        try {
+            var history = PlayerDAO.getBattleHistory(playerId, 15);
+            if (history == null || history.isEmpty()) {
+                showAlert("Riwayat Anda masih kosong.");
+                return;
+            }
+            StringBuilder sb = new StringBuilder();
+            for (String entry : history) {
+                sb.append(entry).append('\n');
+            }
+            showTextDialog("Riwayat Pertarungan", sb.toString());
+        } catch (Exception ex) {
+            showAlert("Error memuat riwayat: " + ex.getMessage());
+        }
+    }
+    
+    private void showTextDialog(String title, String content) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        TextArea area = new TextArea(content);
+        area.setEditable(false);
+        area.setWrapText(true);
+        area.setPrefWidth(420);
+        area.setPrefHeight(300);
+        alert.getDialogPane().setContent(area);
+        alert.showAndWait();
     }
     
     private void resetGame() {
