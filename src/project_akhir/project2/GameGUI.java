@@ -36,6 +36,10 @@ public class GameGUI extends Application {
     private Label enemyHpLabel;
     private ProgressBar playerHpBar;
     private ProgressBar enemyHpBar;
+    private Label playerEnergyLabel;
+    private Label enemyEnergyLabel;
+    private ProgressBar playerEnergyBar;
+    private ProgressBar enemyEnergyBar;
     private TextArea logArea;
     private ComboBox<String> enemyCombo;
     private Button startButton;
@@ -132,7 +136,7 @@ public class GameGUI extends Application {
         selectBox.setMaxWidth(500);
         
         Label selectLabel = new Label("⚔️ Pilih Musuh ⚔️");
-        selectLabel.setStyle("-fx-font-size: 28; -fx-font-weight: bold; -fx-text-fill: #ffd700; -fx-effect: dropshadow(gaussian, rgba(255,215,0,0.6), 15, 0.6, 0, 0);");
+        selectLabel.setStyle("-fx-font-size: 28; -fx-font-weight: bold; -fx-text-fill: #ffd700;");
         selectLabel.setWrapText(false);
         
         enemyCombo = new ComboBox<>();
@@ -419,12 +423,12 @@ public class GameGUI extends Application {
         }
         
         // Stats panel
-        VBox statsPanel = new VBox(8);
+        VBox statsPanel = new VBox(10);
         statsPanel.setAlignment(Pos.CENTER);
         statsPanel.setStyle("-fx-background-color: " + toRgbString(bgColor) + "; -fx-padding: 15; -fx-border-color: " + toRgbString(mainColor) + "; -fx-border-width: 3; -fx-background-radius: 10; -fx-border-radius: 10;");
         statsPanel.setMaxWidth(300);
         
-        Label nameLabel = new Label(isPlayer ? (playerName != null ? playerName : "Hero") : "Enemy");
+        Label nameLabel = new Label(isPlayer ? (playerName != null ? playerName : "Hero") : (musuh != null ? musuh.getNama() : "Enemy"));
         nameLabel.setFont(Font.font("Arial", FontWeight.BOLD, 20));
         nameLabel.setTextFill(Color.WHITE);
         
@@ -432,29 +436,51 @@ public class GameGUI extends Application {
         HBox hpBox = new HBox(10);
         hpBox.setAlignment(Pos.CENTER);
         Label hpText = new Label("HP:");
-        hpText.setFont(Font.font("Arial", FontWeight.BOLD, 14));
+        hpText.setFont(Font.font("Arial", FontWeight.BOLD, 12));
         hpText.setTextFill(Color.WHITE);
+        hpText.setPrefWidth(35);
         
         ProgressBar hpBar = new ProgressBar(1.0);
-        hpBar.setPrefWidth(180);
-        hpBar.setPrefHeight(20);
+        hpBar.setPrefWidth(140);
+        hpBar.setPrefHeight(18);
         hpBar.setStyle("-fx-accent: " + toRgbString(mainColor) + ";");
         
         Label hpLabel = new Label("150/150");
-        hpLabel.setFont(Font.font("Arial", FontWeight.BOLD, 14));
+        hpLabel.setFont(Font.font("Arial", FontWeight.BOLD, 12));
         hpLabel.setTextFill(Color.WHITE);
+        hpLabel.setPrefWidth(70);
         
         hpBox.getChildren().addAll(hpText, hpBar, hpLabel);
         
+        // Energy Bar with label
+        HBox energyBox = new HBox(10);
+        energyBox.setAlignment(Pos.CENTER);
+        Label energyText = new Label("ENR:");
+        energyText.setFont(Font.font("Arial", FontWeight.BOLD, 12));
+        energyText.setTextFill(Color.web("#FFD700"));
+        energyText.setPrefWidth(35);
+        
+        ProgressBar energyBar = new ProgressBar(1.0);
+        energyBar.setPrefWidth(140);
+        energyBar.setPrefHeight(18);
+        energyBar.setStyle("-fx-accent: #FFD700;");
+        
+        Label energyLabel = new Label("100/100");
+        energyLabel.setFont(Font.font("Arial", FontWeight.BOLD, 12));
+        energyLabel.setTextFill(Color.web("#FFD700"));
+        energyLabel.setPrefWidth(70);
+        
+        energyBox.getChildren().addAll(energyText, energyBar, energyLabel);
+        
         Label spdLabel = new Label("SPD: 20");
-        spdLabel.setFont(Font.font("Arial", 13));
+        spdLabel.setFont(Font.font("Arial", 12));
         spdLabel.setTextFill(Color.LIGHTGRAY);
         
-        Label atkLabel = new Label("ATK: " + (isPlayer ? "19" : "19"));
-        atkLabel.setFont(Font.font("Arial", 13));
+        Label atkLabel = new Label("ATK: " + (isPlayer ? "15" : "12"));
+        atkLabel.setFont(Font.font("Arial", 12));
         atkLabel.setTextFill(Color.LIGHTGRAY);
         
-        statsPanel.getChildren().addAll(nameLabel, hpBox, spdLabel, atkLabel);
+        statsPanel.getChildren().addAll(nameLabel, hpBox, energyBox, spdLabel, atkLabel);
         
         container.getChildren().addAll(characterContainer, statsPanel);
         
@@ -462,9 +488,13 @@ public class GameGUI extends Application {
         if (isPlayer) {
             playerHpBar = hpBar;
             playerHpLabel = hpLabel;
+            playerEnergyBar = energyBar;
+            playerEnergyLabel = energyLabel;
         } else {
             enemyHpBar = hpBar;
             enemyHpLabel = hpLabel;
+            enemyEnergyBar = energyBar;
+            enemyEnergyLabel = energyLabel;
         }
         
         return container;
@@ -489,15 +519,15 @@ public class GameGUI extends Application {
         actionBox.setAlignment(Pos.CENTER);
         actionBox.setPadding(new Insets(5));
         
-        attackButton = createBattleActionButton("SERANG", "#2d7a68");
-        healButton = createBattleActionButton("PENYEMBUHAN", "#2d5a8f");
-        ultimateButton = createBattleActionButton("ULTIMATE", "#a8335f");
+        attackButton = createBattleActionButton("⚔️ SERANG\n(20 ENR)", "#2d7a68");
+        healButton = createBattleActionButton("💚 SEMBUH\n(30 ENR, CD:2)", "#2d5a8f");
+        ultimateButton = createBattleActionButton("💥 ULTIMATE\n(50 ENR, CD:3)", "#a8335f");
         
-        Button exitBtn = new Button("EXIT");
-        exitBtn.setStyle("-fx-font-size: 14; -fx-padding: 15 25; -fx-background-color: #8f2d2d; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 8; -fx-border-color: #8f2d2d88; -fx-border-width: 2; -fx-border-radius: 8;");
-        exitBtn.setMinWidth(180);
-        exitBtn.setPrefWidth(180);
-        exitBtn.setMaxWidth(180);
+        Button exitBtn = new Button("🚪 EXIT");
+        exitBtn.setStyle("-fx-font-size: 12; -fx-padding: 12 20; -fx-background-color: #8f2d2d; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 8; -fx-border-color: #8f2d2d88; -fx-border-width: 2; -fx-border-radius: 8;");
+        exitBtn.setMinWidth(140);
+        exitBtn.setPrefWidth(140);
+        exitBtn.setMaxWidth(140);
         exitBtn.setPrefHeight(55);
         exitBtn.setWrapText(true);
         exitBtn.setOnAction(e -> exitGame());
@@ -516,17 +546,17 @@ public class GameGUI extends Application {
     
     private Button createBattleActionButton(String text, String color) {
         Button btn = new Button(text);
-        btn.setStyle("-fx-font-size: 14; -fx-padding: 15 25; -fx-background-color: " + color + "; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 8; -fx-border-color: " + color + "88; -fx-border-width: 2; -fx-border-radius: 8;");
-        btn.setMinWidth(180);
-        btn.setPrefWidth(180);
-        btn.setMaxWidth(180);
+        btn.setStyle("-fx-font-size: 11; -fx-padding: 12 18; -fx-background-color: " + color + "; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 8; -fx-border-color: " + color + "88; -fx-border-width: 2; -fx-border-radius: 8;");
+        btn.setMinWidth(140);
+        btn.setPrefWidth(140);
+        btn.setMaxWidth(140);
         btn.setPrefHeight(55);
         btn.setWrapText(true);
         btn.setTextAlignment(TextAlignment.CENTER);
         
         // Hover effect
-        btn.setOnMouseEntered(e -> btn.setStyle("-fx-font-size: 14; -fx-padding: 15 25; -fx-background-color: derive(" + color + ", 20%); -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 8; -fx-border-color: " + color + "; -fx-border-width: 3; -fx-border-radius: 8;"));
-        btn.setOnMouseExited(e -> btn.setStyle("-fx-font-size: 14; -fx-padding: 15 25; -fx-background-color: " + color + "; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 8; -fx-border-color: " + color + "88; -fx-border-width: 2; -fx-border-radius: 8;"));
+        btn.setOnMouseEntered(e -> btn.setStyle("-fx-font-size: 11; -fx-padding: 12 18; -fx-background-color: derive(" + color + ", 20%); -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 8; -fx-border-color: " + color + "; -fx-border-width: 3; -fx-border-radius: 8;"));
+        btn.setOnMouseExited(e -> btn.setStyle("-fx-font-size: 11; -fx-padding: 12 18; -fx-background-color: " + color + "; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 8; -fx-border-color: " + color + "88; -fx-border-width: 2; -fx-border-radius: 8;"));
         
         return btn;
     }
@@ -538,20 +568,48 @@ public class GameGUI extends Application {
         topBox.setAlignment(Pos.CENTER);
         
         Label titleLabel = new Label("⚔️ RPG Fantasy Arena");
-        titleLabel.setStyle("-fx-font-size: 36; -fx-font-weight: bold; -fx-text-fill: #ffd700; -fx-effect: dropshadow(gaussian, rgba(255,215,0,0.6), 15, 0.7, 0, 0);");
+        titleLabel.setStyle("-fx-font-size: 36; -fx-font-weight: bold; -fx-text-fill: #ffd700;");
         
         topBox.getChildren().add(titleLabel);
         return topBox;
     }
     
     private void promptPlayerName() {
-        TextInputDialog dialog = new TextInputDialog("Hero");
-        dialog.setTitle("Masukkan Nama Warrior");
-        dialog.setHeaderText("Siapa nama pahlawan Anda?");
-        dialog.setContentText("Nama:");
+        Stage nameStage = new Stage();
+        nameStage.setTitle("Create Your Warrior");
+        nameStage.setWidth(500);
+        nameStage.setHeight(300);
+        nameStage.setResizable(false);
         
-        dialog.showAndWait().ifPresent(name -> {
-            playerName = name.isEmpty() ? "Hero" : name;
+        VBox mainLayout = new VBox(20);
+        mainLayout.setPadding(new Insets(40));
+        mainLayout.setAlignment(Pos.CENTER);
+        mainLayout.setStyle("-fx-background: linear-gradient(to bottom, #1a0d2e, #16213e); -fx-border-color: #4d7dbf; -fx-border-width: 3;");
+        
+        Label titleLabel = new Label("⚔️ CREATE YOUR WARRIOR ⚔️");
+        titleLabel.setStyle("-fx-font-size: 20; -fx-font-weight: bold; -fx-text-fill: #4d7dbf;");
+        
+        Label infoLabel = new Label("Masukkan nama pahlawan Anda untuk memulai petualangan:");
+        infoLabel.setStyle("-fx-font-size: 13; -fx-text-fill: #b0b0b0;");
+        
+        TextField nameField = new TextField();
+        nameField.setPromptText("Ketik nama Anda...");
+        nameField.setStyle("-fx-font-size: 14; -fx-padding: 12; -fx-control-inner-background: rgba(26, 31, 38, 0.9); -fx-text-fill: white; -fx-prompt-text-fill: #707070; -fx-border-color: #4d7dbf; -fx-border-width: 2; -fx-font-weight: bold;");
+        nameField.setPrefHeight(45);
+        
+        HBox buttonBox = new HBox(15);
+        buttonBox.setAlignment(Pos.CENTER);
+        
+        Button startBtn = new Button("START");
+        startBtn.setStyle("-fx-font-size: 14; -fx-padding: 12 30; -fx-background-color: #2d7a68; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 8;");
+        startBtn.setPrefWidth(160);
+        
+        startBtn.setOnAction(e -> {
+            String name = nameField.getText().trim();
+            if (name.isEmpty()) {
+                name = "Hero";
+            }
+            playerName = name;
             player = new Player(playerName);
             try {
                 playerId = PlayerDAO.savePlayer(playerName);
@@ -559,7 +617,15 @@ public class GameGUI extends Application {
             } catch (Exception ex) {
                 System.err.println("Error menyimpan player: " + ex.getMessage());
             }
+            nameStage.close();
         });
+        
+        buttonBox.getChildren().add(startBtn);
+        mainLayout.getChildren().addAll(titleLabel, infoLabel, nameField, buttonBox);
+        
+        Scene scene = new Scene(mainLayout);
+        nameStage.setScene(scene);
+        nameStage.showAndWait();
     }
     
     private void startBattle() {
@@ -681,7 +747,9 @@ public class GameGUI extends Application {
             battlePane.setOpacity(0);
             
             // Initialize battle
-            enemyHpBar.setProgress(1.0);
+            if (enemyHpBar != null) {
+                enemyHpBar.setProgress(1.0);
+            }
             appendLog("⚔️ Melawan " + musuh.getNama() + "! Pilih aksi untuk menyerang!");
             setButtonsEnabled(true);
             updateStatus();
@@ -708,6 +776,10 @@ public class GameGUI extends Application {
             
             switch(action) {
                 case ATTACK:
+                    if (player.getEnergi() < 20) {
+                        appendLog("❌ Energi tidak cukup untuk menyerang! (Butuh 20, Punya: " + player.getEnergi() + ")");
+                        return;
+                    }
                     player.serangMusuh(musuh);
                     int damage = previousEnemyHp - musuh.getDarah();
                     totalDamageDealt += Math.max(damage, 0);
@@ -715,12 +787,28 @@ public class GameGUI extends Application {
                     appendLog("⚔️ " + playerName + " menyerang! Damage: " + damage);
                     break;
                 case HEAL:
+                    if (!player.isPenyelembuhanReady()) {
+                        appendLog("❌ Penyembuhan masih cooldown! Tunggu " + player.getCooldownPenyembuhan() + " turn.");
+                        return;
+                    }
+                    if (player.getEnergi() < 30) {
+                        appendLog("❌ Energi tidak cukup untuk penyembuhan! (Butuh 30, Punya: " + player.getEnergi() + ")");
+                        return;
+                    }
                     player.penyembuhan();
                     int healAmount = player.getDarah() - previousPlayerHp;
                     showHealAnimation(playerCharacterContainer, healAmount);
                     appendLog("💚 " + playerName + " menggunakan penyembuhan! +" + healAmount + " HP");
                     break;
                 case ULTIMATE:
+                    if (!player.isUltimateReady()) {
+                        appendLog("❌ Ultimate masih cooldown! Tunggu " + player.getCooldownUltimate() + " turn.");
+                        return;
+                    }
+                    if (player.getEnergi() < 50) {
+                        appendLog("❌ Energi tidak cukup untuk ultimate! (Butuh 50, Punya: " + player.getEnergi() + ")");
+                        return;
+                    }
                     player.seranganBurst(musuh);
                     int ultDamage = previousEnemyHp - musuh.getDarah();
                     totalDamageDealt += Math.max(ultDamage, 0);
@@ -729,6 +817,9 @@ public class GameGUI extends Application {
                     break;
             }
             
+            // Reduce cooldowns and regenerate energy
+            player.kurangiCooldown();
+            player.regenerasiEnergi();
             updateStatus();
             
             if (musuh.getDarah() <= 0) {
@@ -741,50 +832,69 @@ public class GameGUI extends Application {
                 return;
             }
             
-            // Enemy turn - simple random action
+            // Enemy turn - always attack if has energy
             PauseTransition enemyDelay = new PauseTransition(Duration.millis(800));
             enemyDelay.setOnFinished(evt -> {
                 if (musuh == null || musuh.isMati() || player == null || player.getDarah() <= 0) {
                     return;
                 }
+                
+                // Regenerate enemy energy and reduce cooldown
+                musuh.regenerasiEnergi();
+                musuh.kurangiCooldown();
+                
                 int playerPrevHp = player.getDarah();
-                java.util.Random rand = new java.util.Random();
-                if (rand.nextBoolean()) {
-                    musuh.serangan(player);
-                    int enemyDamage = playerPrevHp - player.getDarah();
-                    showDamageAnimation(playerCharacterContainer, enemyDamage, false);
-                    appendLog("🔥 " + musuh.getNama() + " menyerang balik! Damage: " + enemyDamage);
-                    
-                    updateStatus();
-                    
-                    if (player.getDarah() <= 0) {
-                        appendLog("❌ DEFEAT! " + playerName + " telah dikalahkan!");
-                        setButtonsEnabled(false);
-                        recordBattleResult(false);
-                        PauseTransition defeatDelay = new PauseTransition(Duration.millis(1000));
-                        defeatDelay.setOnFinished(e -> showDefeatScreen());
-                        defeatDelay.play();
+                
+                if (musuh.getEnergi() >= 15) {
+                    try {
+                        musuh.serangan(player);
+                        int enemyDamage = playerPrevHp - player.getDarah();
+                        showDamageAnimation(playerCharacterContainer, enemyDamage, false);
+                        appendLog("🔥 " + musuh.getNama() + " menyerang balik! Damage: " + enemyDamage);
+                    } catch (IllegalStateException ex) {
+                        appendLog("💨 " + musuh.getNama() + " energi tidak cukup!");
                     }
                 } else {
-                    appendLog("💨 " + musuh.getNama() + " mencoba menghindar dari serangan!");
+                    appendLog("💨 " + musuh.getNama() + " energi tidak cukup untuk menyerang!");
+                }
+                
+                updateStatus();
+                
+                if (player.getDarah() <= 0) {
+                    appendLog("❌ DEFEAT! " + playerName + " telah dikalahkan!");
+                    setButtonsEnabled(false);
+                    recordBattleResult(false);
+                    PauseTransition defeatDelay = new PauseTransition(Duration.millis(1000));
+                    defeatDelay.setOnFinished(e -> showDefeatScreen());
+                    defeatDelay.play();
                 }
             });
             enemyDelay.play();
             
         } catch (Exception ex) {
-            showAlert("Error: " + ex.getMessage());
+            appendLog("❌ " + ex.getMessage());
         }
     }
     
     private void updateStatus() {
-        if (player != null && playerHpLabel != null) {
+        if (player != null && playerHpLabel != null && playerHpBar != null) {
             playerHpLabel.setText("HP: " + player.getDarah() + "/150");
             playerHpBar.setProgress((double) player.getDarah() / PLAYER_MAX_HP);
+            
+            if (playerEnergyLabel != null && playerEnergyBar != null) {
+                playerEnergyLabel.setText("ENR: " + player.getEnergi() + "/" + player.getEnergiMaksimal());
+                playerEnergyBar.setProgress((double) player.getEnergi() / player.getEnergiMaksimal());
+            }
         }
         
-        if (musuh != null && enemyHpLabel != null) {
+        if (musuh != null && enemyHpLabel != null && enemyHpBar != null) {
             enemyHpLabel.setText("HP: " + musuh.getDarah() + "/" + musuhMaxHp);
             enemyHpBar.setProgress((double) musuh.getDarah() / musuhMaxHp);
+            
+            if (enemyEnergyLabel != null && enemyEnergyBar != null) {
+                enemyEnergyLabel.setText("ENR: " + musuh.getEnergi() + "/" + musuh.getEnergiMaksimal());
+                enemyEnergyBar.setProgress((double) musuh.getEnergi() / musuh.getEnergiMaksimal());
+            }
         }
     }
     
@@ -914,7 +1024,7 @@ public class GameGUI extends Application {
         
         Button exitBtn = new Button("KELUAR");
         exitBtn.setStyle("-fx-font-size: 16; -fx-padding: 15 30; -fx-background-color: #f44336; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 8;");
-        exitBtn.setOnAction(e -> primaryStage.close());
+        exitBtn.setOnAction(e -> exitGame());
         
         buttons.getChildren().addAll(playAgainBtn, exitBtn);
         
@@ -1009,7 +1119,7 @@ public class GameGUI extends Application {
         
         Button exitBtn = new Button("KELUAR");
         exitBtn.setStyle("-fx-font-size: 16; -fx-padding: 15 30; -fx-background-color: #666; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 8;");
-        exitBtn.setOnAction(e -> primaryStage.close());
+        exitBtn.setOnAction(e -> exitGame());
         
         buttons.getChildren().addAll(retryBtn, exitBtn);
         
@@ -1037,17 +1147,22 @@ public class GameGUI extends Application {
     
     private void recordBattleResult(boolean menang) {
         if (battleResultRecorded || playerId == -1) {
+            System.out.println("⚠ Battle result sudah direcord atau playerId invalid. battleResultRecorded=" + battleResultRecorded + ", playerId=" + playerId);
             return;
         }
         battleResultRecorded = true;
         
         try {
             String namaMusuh = (musuh != null) ? musuh.getNama() : "Unknown";
+            System.out.println("📊 Menyimpan battle result: Player ID=" + playerId + ", Enemy=" + namaMusuh + 
+                             ", Menang=" + menang + ", Damage=" + totalDamageDealt);
+            
             PlayerDAO.updatePlayerStats(playerId, menang, totalDamageDealt);
             PlayerDAO.saveBattleHistory(playerId, namaMusuh, totalDamageDealt, menang);
             System.out.println("✓ Battle result tersimpan ke database");
         } catch (Exception ex) {
             System.err.println("Error menyimpan battle result: " + ex.getMessage());
+            ex.printStackTrace();
         }
     }
     
@@ -1058,25 +1173,110 @@ public class GameGUI extends Application {
                 showAlert("Leaderboard masih kosong.");
                 return;
             }
-            StringBuilder sb = new StringBuilder();
+            
+            // Create custom dialog
+            Stage leaderboardStage = new Stage();
+            leaderboardStage.setTitle("🏆 LEADERBOARD");
+            leaderboardStage.setWidth(600);
+            leaderboardStage.setHeight(500);
+            leaderboardStage.setResizable(false);
+            
+            VBox mainLayout = new VBox(15);
+            mainLayout.setPadding(new Insets(20));
+            mainLayout.setStyle("-fx-background: linear-gradient(to bottom, #1a0d2e, #16213e); -fx-border-color: #ffd700; -fx-border-width: 3;");
+            
+            // Title
+            Label titleLabel = new Label("🏅 TOP 10 WARRIORS 🏅");
+            titleLabel.setStyle("-fx-font-size: 24; -fx-font-weight: bold; -fx-text-fill: #ffd700;");
+            
+            // Leaderboard content
+            VBox leaderboardBox = new VBox(8);
+            leaderboardBox.setStyle("-fx-background-color: rgba(15, 20, 25, 0.8); -fx-border-color: #4d7dbf; -fx-border-width: 2; -fx-padding: 15; -fx-border-radius: 10;");
+            
             int rank = 1;
             for (var p : topPlayers) {
-                sb.append(rank)
-                  .append(". ")
-                  .append(p.name)
-                  .append("  | W:")
-                  .append(p.totalMenang)
-                  .append(" L:")
-                  .append(p.totalKalah)
-                  .append("  | DMG: ")
-                  .append(p.damageTertinggi)
-                  .append('\n');
+                HBox playerRow = createLeaderboardPlayerRow(rank, p);
+                leaderboardBox.getChildren().add(playerRow);
                 rank++;
             }
-            showTextDialog("Leaderboard Top 10", sb.toString());
+            
+            // Buttons
+            HBox buttonBox = new HBox(15);
+            buttonBox.setAlignment(Pos.CENTER);
+            
+            Button closeBtn = new Button("CLOSE");
+            closeBtn.setStyle("-fx-font-size: 14; -fx-padding: 12 30; -fx-background-color: #8f2d2d; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 8;");
+            closeBtn.setOnAction(e -> leaderboardStage.close());
+            
+            Button resetBtn = new Button("🗑️ RESET LEADERBOARD");
+            resetBtn.setStyle("-fx-font-size: 12; -fx-padding: 10 20; -fx-background-color: #f44336; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 8;");
+            resetBtn.setOnAction(e -> {
+                Alert confirmAlert = new Alert(Alert.AlertType.CONFIRMATION);
+                confirmAlert.setTitle("Confirm Reset");
+                confirmAlert.setHeaderText("Reset Leaderboard?");
+                confirmAlert.setContentText("Semua data pemain akan dihapus.\nRiwayat pertempuran tetap tersimpan.\n\nLanjutkan?");
+                
+                if (confirmAlert.showAndWait().orElse(ButtonType.CANCEL) == ButtonType.OK) {
+                    PlayerDAO.resetLeaderboard();
+                    leaderboardStage.close();
+                    showAlert("✓ Leaderboard berhasil direset!");
+                }
+            });
+            
+            buttonBox.getChildren().addAll(closeBtn, resetBtn);
+            
+            mainLayout.getChildren().addAll(titleLabel, leaderboardBox, buttonBox);
+            
+            Scene scene = new Scene(mainLayout);
+            leaderboardStage.setScene(scene);
+            leaderboardStage.show();
         } catch (Exception ex) {
             showAlert("Error memuat leaderboard: " + ex.getMessage());
         }
+    }
+    
+    private HBox createLeaderboardPlayerRow(int rank, PlayerDAO.PlayerData p) {
+        HBox row = new HBox(20);
+        row.setPadding(new Insets(10));
+        row.setAlignment(Pos.CENTER_LEFT);
+        row.setStyle("-fx-border-color: #4d7dbf; -fx-border-width: 0 0 1 0; -fx-padding: 10;");
+        
+        // Medal or rank
+        Label medalLabel = new Label(getRankMedal(rank) + " #" + rank);
+        medalLabel.setStyle("-fx-font-size: 14; -fx-font-weight: bold; -fx-text-fill: " + getRankColor(rank) + "; -fx-min-width: 60;");
+        
+        // Player name
+        Label nameLabel = new Label(p.name);
+        nameLabel.setStyle("-fx-font-size: 13; -fx-text-fill: #ffffff; -fx-min-width: 120;");
+        
+        // Wins and losses
+        Label recordLabel = new Label("W: " + p.totalMenang + " | L: " + p.totalKalah);
+        recordLabel.setStyle("-fx-font-size: 12; -fx-text-fill: #b0b0b0; -fx-min-width: 100;");
+        
+        // Highest damage
+        Label dmgLabel = new Label("DMG: " + p.damageTertinggi);
+        dmgLabel.setStyle("-fx-font-size: 12; -fx-text-fill: #ff6b6b; -fx-min-width: 100; -fx-font-weight: bold;");
+        
+        row.getChildren().addAll(medalLabel, nameLabel, recordLabel, dmgLabel);
+        return row;
+    }
+    
+    private String getRankMedal(int rank) {
+        return switch(rank) {
+            case 1 -> "🥇";
+            case 2 -> "🥈";
+            case 3 -> "🥉";
+            default -> "⭐";
+        };
+    }
+    
+    private String getRankColor(int rank) {
+        return switch(rank) {
+            case 1 -> "#FFD700";  // Gold
+            case 2 -> "#C0C0C0";  // Silver
+            case 3 -> "#CD7F32";  // Bronze
+            default -> "#ffffff";
+        };
     }
     
     private void showPlayerHistory() {
@@ -1090,27 +1290,93 @@ public class GameGUI extends Application {
                 showAlert("Riwayat Anda masih kosong.");
                 return;
             }
-            StringBuilder sb = new StringBuilder();
-            for (String entry : history) {
-                sb.append(entry).append('\n');
+            
+            // Create custom dialog
+            Stage historyStage = new Stage();
+            historyStage.setTitle("📜 RIWAYAT PERTARUNGAN");
+            historyStage.setWidth(650);
+            historyStage.setHeight(500);
+            historyStage.setResizable(false);
+            
+            VBox mainLayout = new VBox(15);
+            mainLayout.setPadding(new Insets(20));
+            mainLayout.setStyle("-fx-background: linear-gradient(to bottom, #1a0d2e, #16213e); -fx-border-color: #a8335f; -fx-border-width: 3;");
+            
+            // Title with player name
+            Label titleLabel = new Label("📜 " + playerName + "'s BATTLE HISTORY");
+            titleLabel.setStyle("-fx-font-size: 20; -fx-font-weight: bold; -fx-text-fill: #a8335f;");
+            
+            // Get player stats
+            PlayerDAO.PlayerData playerData = PlayerDAO.getPlayer(playerId);
+            if (playerData != null) {
+                Label statsLabel = new Label(String.format("Total Wins: %d | Total Losses: %d | Highest Damage: %d",
+                    playerData.totalMenang, playerData.totalKalah, playerData.damageTertinggi));
+                statsLabel.setStyle("-fx-font-size: 12; -fx-text-fill: #b0b0b0;");
+                mainLayout.getChildren().add(statsLabel);
             }
-            showTextDialog("Riwayat Pertarungan", sb.toString());
+            
+            // History content
+            VBox historyBox = new VBox(8);
+            historyBox.setStyle("-fx-background-color: rgba(15, 20, 25, 0.8); -fx-border-color: #a8335f; -fx-border-width: 2; -fx-padding: 15; -fx-border-radius: 10;");
+            
+            for (String entry : history) {
+                HBox historyRow = createHistoryRow(entry);
+                historyBox.getChildren().add(historyRow);
+            }
+            
+            ScrollPane scrollPane = new ScrollPane(historyBox);
+            scrollPane.setFitToWidth(true);
+            scrollPane.setStyle("-fx-background-color: transparent; -fx-control-inner-background: transparent;");
+            
+            // Close button
+            Button closeBtn = new Button("CLOSE");
+            closeBtn.setStyle("-fx-font-size: 14; -fx-padding: 12 30; -fx-background-color: #8f2d2d; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 8;");
+            closeBtn.setOnAction(e -> historyStage.close());
+            
+            HBox buttonBox = new HBox();
+            buttonBox.setAlignment(Pos.CENTER);
+            buttonBox.getChildren().add(closeBtn);
+            
+            mainLayout.getChildren().addAll(titleLabel, scrollPane, buttonBox);
+            
+            Scene scene = new Scene(mainLayout);
+            historyStage.setScene(scene);
+            historyStage.show();
         } catch (Exception ex) {
             showAlert("Error memuat riwayat: " + ex.getMessage());
         }
     }
     
-    private void showTextDialog(String title, String content) {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle(title);
-        alert.setHeaderText(null);
-        TextArea area = new TextArea(content);
-        area.setEditable(false);
-        area.setWrapText(true);
-        area.setPrefWidth(420);
-        area.setPrefHeight(300);
-        alert.getDialogPane().setContent(area);
-        alert.showAndWait();
+    private HBox createHistoryRow(String entry) {
+        HBox row = new HBox(15);
+        row.setPadding(new Insets(10));
+        row.setAlignment(Pos.CENTER_LEFT);
+        row.setStyle("-fx-border-color: #a8335f; -fx-border-width: 0 0 1 0; -fx-padding: 10;");
+        
+        // Parse entry: [RESULT] TIMESTAMP vs ENEMY - Damage: NUM
+        String[] parts = entry.split(" - ");
+        String resultAndEnemy = parts[0];
+        String damage = parts.length > 1 ? parts[1] : "Damage: 0";
+        
+        // Extract result
+        String result = resultAndEnemy.contains("MENANG") ? "MENANG" : "KALAH";
+        String resultIcon = result.equals("MENANG") ? "✅" : "❌";
+        String resultColor = result.equals("MENANG") ? "#4CAF50" : "#ff6b6b";
+        
+        Label resultLabel = new Label(resultIcon + " " + result);
+        resultLabel.setStyle("-fx-font-size: 12; -fx-font-weight: bold; -fx-text-fill: " + resultColor + "; -fx-min-width: 80;");
+        
+        // Extract enemy name (simple parsing)
+        String enemyInfo = resultAndEnemy.replaceAll("\\[.*?\\]", "").trim();
+        Label enemyLabel = new Label(enemyInfo);
+        enemyLabel.setStyle("-fx-font-size: 11; -fx-text-fill: #b0b0b0; -fx-min-width: 150;");
+        
+        // Damage
+        Label dmgLabel = new Label(damage);
+        dmgLabel.setStyle("-fx-font-size: 11; -fx-text-fill: #ff6b6b; -fx-font-weight: bold;");
+        
+        row.getChildren().addAll(resultLabel, enemyLabel, dmgLabel);
+        return row;
     }
     
     private void resetGame() {
@@ -1124,16 +1390,48 @@ public class GameGUI extends Application {
     }
     
     private void exitGame() {
-        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-        alert.setTitle("Exit Game");
-        alert.setHeaderText("Apakah Anda yakin ingin keluar?");
-        alert.setContentText("Progress battle akan hilang.");
+        Stage exitStage = new Stage();
+        exitStage.setTitle("Exit Game");
+        exitStage.setWidth(500);
+        exitStage.setHeight(280);
+        exitStage.setResizable(false);
         
-        alert.showAndWait().ifPresent(response -> {
-            if (response == ButtonType.OK) {
-                primaryStage.close();
-            }
+        VBox mainLayout = new VBox(30);
+        mainLayout.setPadding(new Insets(40));
+        mainLayout.setAlignment(Pos.CENTER);
+        mainLayout.setStyle("-fx-background: linear-gradient(to bottom, #1a0d2e, #16213e); -fx-border-color: #8f2d2d; -fx-border-width: 3;");
+        
+        Label titleLabel = new Label("⚠️ EXIT GAME?");
+        titleLabel.setStyle("-fx-font-size: 22; -fx-font-weight: bold; -fx-text-fill: #ff6b6b;");
+        
+        Label questionLabel = new Label("Apakah Anda yakin ingin keluar dari game?");
+        questionLabel.setStyle("-fx-font-size: 13; -fx-text-fill: #b0b0b0;");
+        
+        Label warningLabel = new Label("Progress battle saat ini akan hilang!");
+        warningLabel.setStyle("-fx-font-size: 12; -fx-text-fill: #ffaa00;");
+        
+        HBox buttonBox = new HBox(20);
+        buttonBox.setAlignment(Pos.CENTER);
+        
+        Button yesBtn = new Button("YES, EXIT");
+        yesBtn.setStyle("-fx-font-size: 14; -fx-padding: 12 25; -fx-background-color: #8f2d2d; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 8;");
+        yesBtn.setPrefWidth(130);
+        yesBtn.setOnAction(e -> {
+            exitStage.close();
+            primaryStage.close();
         });
+        
+        Button noBtn = new Button("CANCEL");
+        noBtn.setStyle("-fx-font-size: 14; -fx-padding: 12 25; -fx-background-color: #2d5a8f; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 8;");
+        noBtn.setPrefWidth(130);
+        noBtn.setOnAction(e -> exitStage.close());
+        
+        buttonBox.getChildren().addAll(yesBtn, noBtn);
+        mainLayout.getChildren().addAll(titleLabel, questionLabel, warningLabel, buttonBox);
+        
+        Scene scene = new Scene(mainLayout);
+        exitStage.setScene(scene);
+        exitStage.showAndWait();
     }
     
     private void showAlert(String message) {

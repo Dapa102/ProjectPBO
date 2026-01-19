@@ -156,11 +156,18 @@ public class PlayerDAO {
             stmt.setInt(3, damageDealt);
             stmt.setString(4, menang ? "MENANG" : "KALAH");
             
-            stmt.executeUpdate();
-            System.out.println("✓ Battle history berhasil disimpan");
+            int rowsAffected = stmt.executeUpdate();
+            if (rowsAffected > 0) {
+                System.out.println("✓ Battle history berhasil disimpan - Player ID: " + playerId + 
+                                 ", Enemy: " + namaMusuh + ", Result: " + (menang ? "MENANG" : "KALAH") + 
+                                 ", Damage: " + damageDealt);
+            } else {
+                System.err.println("⚠ Battle history insert gagal - tidak ada baris yang diupdate");
+            }
             
         } catch (SQLException e) {
             System.err.println("Error saat menyimpan battle history: " + e.getMessage());
+            e.printStackTrace();
         }
     }
     
@@ -220,6 +227,7 @@ public class PlayerDAO {
             stmt.setInt(2, limit);
             ResultSet rs = stmt.executeQuery();
             
+            int count = 0;
             while (rs.next()) {
                 String entry = String.format("[%s] %s vs %s - Damage: %d",
                     rs.getString("hasil"),
@@ -228,12 +236,34 @@ public class PlayerDAO {
                     rs.getInt("damage_dihasilkan")
                 );
                 history.add(entry);
+                count++;
             }
+            System.out.println("✓ Berhasil mengambil " + count + " battle history untuk player ID: " + playerId);
             
         } catch (SQLException e) {
             System.err.println("Error saat mengambil battle history: " + e.getMessage());
+            e.printStackTrace();
         }
         
         return history;
+    }
+    
+    /**
+     * Reset leaderboard - reset semua stats pemain tapi tetap simpan record dan battle history
+     */
+    public static void resetLeaderboard() {
+        String sql = "UPDATE players SET total_menang = 0, total_kalah = 0, damage_tertinggi = 0";
+        
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            int rowsUpdated = stmt.executeUpdate();
+            System.out.println("✓ Leaderboard berhasil direset - " + rowsUpdated + " pemain di-reset");
+            System.out.println("✓ Data pemain dan battle history tetap tersimpan di database");
+            
+        } catch (SQLException e) {
+            System.err.println("Error saat mereset leaderboard: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 }
