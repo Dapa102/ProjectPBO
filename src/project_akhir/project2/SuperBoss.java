@@ -2,10 +2,11 @@ package project_akhir.project2;
 
 public class SuperBoss extends Boss {
 
+    // Tier 3: SuperBoss (musuh terkuat)
     public SuperBoss(String nama) {
         super(nama);
-        setDarah(300);
-        setSerangan(50);
+        setDarah(400);        // Tier 3
+        setSerangan(60);      // Tier 3
     }
 
     @Override

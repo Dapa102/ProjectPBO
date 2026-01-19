@@ -280,7 +280,7 @@ public class GameGUI extends Application {
         nameLabel.setFont(Font.font("Arial", FontWeight.BOLD, 18));
         nameLabel.setTextFill(Color.WHITE);
         
-        Label hpLabel = new Label("HP " + (isPlayer ? "21200" : "21200"));
+        Label hpLabel = new Label("HP " + (isPlayer ? (player != null ? player.getDarah() : PLAYER_MAX_HP) : (musuh != null ? musuh.getDarah() : 80)));
         hpLabel.setFont(Font.font("Arial", FontWeight.BOLD, 16));
         hpLabel.setTextFill(Color.WHITE);
         
@@ -288,7 +288,7 @@ public class GameGUI extends Application {
         spdLabel.setFont(Font.font("Arial", 14));
         spdLabel.setTextFill(Color.WHITE);
         
-        Label atkLabel = new Label("ATK " + (isPlayer ? "19" : "19"));
+        Label atkLabel = new Label("ATK " + (isPlayer ? (player != null ? player.getSerangan() : 15) : (musuh != null ? musuh.getSerangan() : 12)));
         atkLabel.setFont(Font.font("Arial", 14));
         atkLabel.setTextFill(Color.WHITE);
         

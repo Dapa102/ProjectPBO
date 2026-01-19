@@ -5,7 +5,7 @@ import java.util.Set;
 
 public class Player {
     private String nama;
-    private int darah = 100;
+    private int darah = 150;  // Disesuaikan dengan tier system (Tier 1 musuh)
     private int serangan = 15;
     private static final int MAX_DARAH = 150;
 
@@ -79,6 +79,10 @@ public class Player {
 
     public int getDarah(){ 
         return darah; 
+    }
+
+    public int getSerangan() {
+        return serangan;
     }
 
     public String getNama(){ 

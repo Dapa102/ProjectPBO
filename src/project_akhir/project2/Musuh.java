@@ -6,14 +6,15 @@ public class Musuh {
     private int darah;
     private int serangan;
 
+    // Tier 1: Musuh biasa (Goblin, Orc, dll)
     public Musuh(String nama) {
         if (nama == null || nama.trim().isEmpty()) {
             this.nama = "Musuh tidak diketahui";
         } else {
             this.nama = nama;
         }
-        this.darah = 50;
-        this.serangan = 10;
+        this.darah = 80;      // Tier 1
+        this.serangan = 12;   // Tier 1
     }
 
     public String getNama() {
